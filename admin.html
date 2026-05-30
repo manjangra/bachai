@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - B.A. Chai Wala</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800 antialiased overflow-hidden flex h-screen">
+
+    <div id="loader" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center">
+        <i class="fa-solid fa-spinner fa-spin text-4xl text-orange-600 mb-4"></i>
+        <p class="text-gray-500 font-medium animate-pulse">Loading System...</p>
+    </div>
+
+    <aside class="w-20 md:w-64 bg-gray-900 text-white flex flex-col shrink-0 transition-all">
+        <div class="p-4 md:p-6 flex items-center justify-center md:justify-start gap-3 border-b border-gray-800">
+            <i class="fa-solid fa-mug-hot text-orange-500 text-xl"></i>
+            <h1 class="font-bold text-xl hidden md:block">Admin Panel</h1>
+        </div>
+        <nav class="flex-1 p-2 md:p-4 space-y-2 overflow-y-auto">
+            <button onclick="switchTab('orders')" id="btn-orders" class="nav-btn w-full flex items-center justify-center md:justify-start gap-3 p-3 rounded-lg bg-orange-600 text-white transition-colors relative">
+                <i class="fa-solid fa-bolt"></i> <span class="hidden md:block">Live Orders</span>
+                <span id="order-badge" class="hidden absolute top-2 right-2 md:static bg-red-500 text-white text-[10px] md:text-xs font-bold px-1.5 md:px-2 py-0.5 rounded-full">0</span>
+            </button>
+            <button onclick="switchTab('history')" id="btn-history" class="nav-btn w-full flex items-center justify-center md:justify-start gap-3 p-3 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors">
+                <i class="fa-solid fa-clock-rotate-left"></i> <span class="hidden md:block">Order History</span>
+            </button>
+            <button onclick="switchTab('customers')" id="btn-customers" class="nav-btn w-full flex items-center justify-center md:justify-start gap-3 p-3 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors">
+                <i class="fa-solid fa-users"></i> <span class="hidden md:block">Customers</span>
+            </button>
+            <button onclick="switchTab('menu')" id="btn-menu" class="nav-btn w-full flex items-center justify-center md:justify-start gap-3 p-3 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors">
+                <i class="fa-solid fa-utensils"></i> <span class="hidden md:block">Menu Config</span>
+            </button>
+        </nav>
+        <div class="p-4 border-t border-gray-800 text-center">
+            <a href="index.html" class="text-gray-400 hover:text-white text-sm flex items-center justify-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i> <span class="hidden md:block">Main Site</span>
+            </a>
+            <div class="mt-4 hidden md:flex items-center justify-center gap-2 text-xs text-gray-500 cursor-pointer hover:text-blue-400 transition-colors" onclick="window.open('https://bigiview.com')">
+                Crafted by <span class="font-bold">BigiView</span> <i class="fa-solid fa-heart text-red-500"></i>
+            </div>
+        </div>
+    </aside>
+
+    <main class="flex-1 p-4 md:p-8 overflow-y-auto">
+        <div class="max-w-5xl mx-auto">
+            
+            <!-- Live Orders Tab -->
+            <div id="tab-orders" class="tab-content active space-y-6">
+                <h2 class="text-2xl font-bold text-gray-800">Live Orders</h2>
+                <div id="live-orders-container" class="grid gap-6">
+                    <!-- Orders injected via JS -->
+                </div>
+            </div>
+
+            <!-- Order History Tab -->
+            <div id="tab-history" class="tab-content space-y-6">
+                <h2 class="text-2xl font-bold text-gray-800">Order History</h2>
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-gray-50 text-gray-600 border-b border-gray-100">
+                                <tr>
+                                    <th class="p-4">Date & Time</th>
+                                    <th class="p-4">Customer</th>
+                                    <th class="p-4">Items</th>
+                                    <th class="p-4">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-container" class="divide-y divide-gray-100">
+                                <!-- History injected via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customers Tab -->
+            <div id="tab-customers" class="tab-content space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <h2 class="text-2xl font-bold text-gray-800">Customers Directory</h2>
+                    <button onclick="toggleForm('customer-form')" class="bg-orange-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-orange-700">
+                        <i class="fa-solid fa-plus"></i> Naya Grahak
+                    </button>
+                </div>
+
+                <!-- Add Customer Form -->
+                <form id="customer-form" class="hidden bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Naam</label>
+                            <input type="text" id="cust-name" required class="w-full border border-gray-300 p-2 rounded focus:outline-none focus:border-orange-500" placeholder="Rahul Kumar">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Business Name</label>
+                            <input type="text" id="cust-business" class="w-full border border-gray-300 p-2 rounded focus:outline-none focus:border-orange-500" placeholder="Sharma Traders">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                            <input type="text" id="cust-phone" class="w-full border border-gray-300 p-2 rounded focus:outline-none focus:border-orange-500" placeholder="9876543210">
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                        <input type="text" id="cust-address" class="w-full border border-gray-300 p-2 rounded focus:outline-none focus:border-orange-500" placeholder="Dukan ka pura pata...">
+                    </div>
+                    <div class="flex justify-end">
+                        <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded font-medium hover:bg-green-700">Save Customer</button>
+                    </div>
+                </form>
+
+                <div id="customers-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Customers injected via JS -->
+                </div>
+            </div>
+
+            <!-- Menu Tab -->
+            <div id="tab-menu" class="tab-content space-y-6">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-bold text-gray-800">Menu Settings</h2>
+                    <button onclick="toggleForm('menu-form')" class="bg-orange-600 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+                        <i class="fa-solid fa-plus"></i> Add Item
+                    </button>
+                </div>
+
+                <!-- Add Menu Form -->
+                <form id="menu-form" class="hidden bg-white p-6 rounded-xl shadow-sm border border-gray-200 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm mb-1 text-gray-700">Item Name</label>
+                        <input type="text" id="menu-name" required class="w-full border border-gray-300 p-2 rounded">
+                    </div>
+                    <div>
+                        <label class="block text-sm mb-1 text-gray-700">Category (Custom)</label>
+                        <input type="text" id="menu-category" required placeholder="e.g. Garam Garam, Snacks" class="w-full border border-gray-300 p-2 rounded">
+                    </div>
+                    <div>
+                        <label class="block text-sm mb-1 text-gray-700">Price (₹)</label>
+                        <input type="number" id="menu-price" required class="w-full border border-gray-300 p-2 rounded">
+                    </div>
+                    <div>
+                        <label class="block text-sm mb-1 text-gray-700">Emoji / Icon</label>
+                        <input type="text" id="menu-emoji" required value="☕" class="w-full border border-gray-300 p-2 rounded">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm mb-1 text-gray-700">Description</label>
+                        <input type="text" id="menu-desc" class="w-full border border-gray-300 p-2 rounded">
+                    </div>
+                    <div class="md:col-span-3 flex justify-end">
+                        <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded font-medium hover:bg-green-700">Save Item</button>
+                    </div>
+                </form>
+
+                <div id="menu-container" class="grid gap-6">
+                    <!-- Menu categories injected via JS -->
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Edit Customer Modal -->
+    <div id="edit-customer-modal" class="hidden fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl transform transition-all">
+            <h3 class="text-xl font-bold text-gray-900 mb-4">Edit Customer Details</h3>
+            <form id="edit-customer-form" onsubmit="submitEditCustomer(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Naam</label>
+                    <input type="text" id="edit-cust-name" required class="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-orange-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Business Name</label>
+                    <input type="text" id="edit-cust-business" class="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-orange-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                    <input type="text" id="edit-cust-phone" class="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-orange-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                    <input type="text" id="edit-cust-address" class="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-orange-500">
+                </div>
+                <div class="flex justify-end gap-3 mt-6">
+                    <button type="button" onclick="closeEditModal()" class="px-4 py-2 text-gray-600 font-medium hover:bg-gray-100 rounded-lg">Cancel</button>
+                    <button type="submit" class="px-6 py-2 bg-orange-600 text-white font-medium hover:bg-orange-700 rounded-lg">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Customer History Modal -->
+    <div id="customer-history-modal" class="hidden fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl w-full max-w-lg p-6 shadow-2xl flex flex-col max-h-[80vh]">
+            <div class="flex justify-between items-center mb-4 border-b pb-3">
+                <div>
+                    <h3 id="hist-modal-title" class="text-xl font-bold text-gray-900">History</h3>
+                    <p id="hist-modal-total" class="text-orange-600 font-bold text-sm"></p>
+                </div>
+                <button onclick="closeHistoryModal()" class="text-gray-400 hover:text-gray-800"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div id="hist-modal-list" class="overflow-y-auto space-y-2 flex-1 pr-2">
+                <!-- Data -->
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // User's Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyBNVfetxF7CGBLuO4yM8LnXued5Vn4p19Q",
+            authDomain: "ba-chai-wala-a9f5d.firebaseapp.com",
+            projectId: "ba-chai-wala-a9f5d",
+            storageBucket: "ba-chai-wala-a9f5d.firebasestorage.app",
+            messagingSenderId: "842026226138",
+            appId: "1:842026226138:web:4aeee6b3f37e79abd3f0e3"
+        };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        // Strict Path Rule Wrapper (using a static app ID for structure)
+        const structAppId = 'ba-chai-wala-app';
+        const getCol = (name) => collection(db, 'artifacts', structAppId, 'public', 'data', name);
+
+        // State
+        let customers = [];
+        let menu = [];
+        let orders = [];
+        let currentUser = null;
+
+        // UI Helpers
+        window.switchTab = (tabId) => {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => {
+                el.classList.remove('bg-orange-600', 'text-white');
+                el.classList.add('text-gray-300');
+            });
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            document.getElementById(`btn-${tabId}`).classList.remove('text-gray-300');
+            document.getElementById(`btn-${tabId}`).classList.add('bg-orange-600', 'text-white');
+        };
+
+        window.toggleForm = (id) => {
+            const form = document.getElementById(id);
+            form.classList.toggle('hidden');
+        };
+
+        window.showToast = (msg, type = 'success') => {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `px-6 py-3 rounded-lg shadow-lg text-white font-bold transform transition-all duration-300 translate-x-full ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
+            toast.innerHTML = msg;
+            container.appendChild(toast);
+            
+            setTimeout(() => toast.classList.remove('translate-x-full'), 10);
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        };
+
+        // Authentication
+        const initAuth = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                await signInAnonymously(auth);
+            }
+        };
+
+        initAuth();
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                startListeners();
+            }
+        });
+
+        // Data Listeners
+        function startListeners() {
+            onSnapshot(getCol('ba_customers'), (snap) => {
+                customers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                renderCustomers();
+                renderHistory(); // update names in history
+                renderLiveOrders();
+            }, (err) => console.error(err));
+
+            onSnapshot(getCol('ba_menu'), (snap) => {
+                menu = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                renderMenu();
+            }, (err) => console.error(err));
+
+            onSnapshot(getCol('ba_orders'), (snap) => {
+                orders = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => b.createdAt - a.createdAt);
+                
+                const activeCount = orders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled').length;
+                const badge = document.getElementById('order-badge');
+                if(activeCount > 0) { badge.classList.remove('hidden'); badge.innerText = activeCount; } 
+                else { badge.classList.add('hidden'); }
+
+                renderLiveOrders();
+                renderHistory();
+                renderCustomers();
+                document.getElementById('loader').classList.add('hidden');
+            }, (err) => console.error(err));
+        }
+
+        const statusFlow = ['pending', 'accepted', 'preparing', 'dispatched', 'delivered'];
+        
+        window.updateOrderStatus = async (orderId, currentStatus) => {
+            const nextIdx = statusFlow.indexOf(currentStatus) + 1;
+            if(nextIdx < statusFlow.length) {
+                try {
+                    await updateDoc(doc(getCol('ba_orders'), orderId), { status: statusFlow[nextIdx] });
+                    showToast(`Order marked as ${statusFlow[nextIdx].toUpperCase()}`);
+                } catch(e) { showToast('Error updating order', 'error'); }
+            }
+        };
+
+        function renderLiveOrders() {
+            const activeOrders = orders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled');
+            const container = document.getElementById('live-orders-container');
+            
+            if (activeOrders.length === 0) {
+                container.innerHTML = `<div class="text-center p-12 bg-white rounded-xl shadow-sm text-gray-500">Mahaul shant hai. Koi naya order nahi aaya abhi.</div>`;
+                return;
+            }
+
+            container.innerHTML = activeOrders.map(order => {
+                const cust = customers.find(c => c.id === order.customerId) || { name: 'Unknown', businessName: '', phone: '' };
+                const currentIdx = statusFlow.indexOf(order.status);
+                const nextStatus = statusFlow[currentIdx + 1];
+                
+                const itemsHtml = order.items.map(item => `
+                    <li class="flex justify-between border-b border-gray-200 last:border-0 pb-1">
+                        <span>${item.qty}x ${item.emoji} ${item.name}</span>
+                        <span>₹${item.price * item.qty}</span>
+                    </li>`).join('');
+
+                return `
+                <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-orange-500 animate-fadeIn">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="font-bold text-lg text-gray-900">${cust.name} <span class="text-sm font-normal text-gray-500 ml-2">${new Date(order.createdAt).toLocaleTimeString()}</span></h3>
+                            ${cust.businessName ? `<p class="text-xs text-gray-500"><i class="fa-solid fa-building"></i> ${cust.businessName} | <i class="fa-solid fa-phone"></i> ${cust.phone}</p>` : ''}
+                            <p class="text-gray-800 font-bold mt-1">Total Bill: ₹${order.total}</p>
+                        </div>
+                        <div class="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-bold capitalize flex items-center gap-2">
+                            <i class="fa-solid fa-spinner fa-spin-pulse"></i> ${order.status}
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-50 p-4 rounded-lg mb-4 text-sm">
+                        <ul class="space-y-2">${itemsHtml}</ul>
+                    </div>
+
+                    ${nextStatus ? `
+                    <button onclick="updateOrderStatus('${order.id}', '${order.status}')" class="w-full py-3 bg-gray-900 hover:bg-black text-white rounded-lg font-bold transition-colors flex justify-center items-center gap-2">
+                        Move to ${nextStatus.toUpperCase()} <i class="fa-solid fa-arrow-right"></i>
+                    </button>` : ''}
+                </div>`;
+            }).join('');
+        }
+
+        function renderHistory() {
+            const historyOrders = orders.filter(o => o.status === 'delivered' || o.status === 'cancelled');
+            const container = document.getElementById('history-container');
+            
+            if (historyOrders.length === 0) {
+                container.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-gray-500">No history yet.</td></tr>`;
+                return;
+            }
+
+            container.innerHTML = historyOrders.map(order => {
+                const cust = customers.find(c => c.id === order.customerId) || { name: 'Unknown' };
+                const itemSummary = order.items.map(i => `${i.qty}x ${i.name}`).join(', ');
+                return `
+                <tr class="hover:bg-gray-50">
+                    <td class="p-4 whitespace-nowrap">${new Date(order.createdAt).toLocaleDateString()} ${new Date(order.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
+                    <td class="p-4 font-bold text-gray-800">${cust.name}</td>
+                    <td class="p-4 text-gray-500 max-w-xs truncate" title="${itemSummary}">${itemSummary}</td>
+                    <td class="p-4 font-bold ${order.status === 'cancelled' ? 'text-red-500' : 'text-green-600'}">₹${order.total} ${order.status === 'cancelled' ? '<br><span class="text-[10px] bg-red-100 px-1 rounded text-red-600 font-normal">Cancelled</span>' : ''}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        document.getElementById('customer-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                name: document.getElementById('cust-name').value,
+                businessName: document.getElementById('cust-business').value,
+                phone: document.getElementById('cust-phone').value,
+                address: document.getElementById('cust-address').value,
+                password: '', 
+                createdAt: Date.now()
+            };
+            try {
+                await addDoc(getCol('ba_customers'), data);
+                e.target.reset();
+                toggleForm('customer-form');
+                showToast('Customer Added!');
+            } catch(e) { showToast('Error adding customer', 'error'); }
+        });
+
+        window.deleteCustomer = async (id) => {
+            try { await deleteDoc(doc(getCol('ba_customers'), id)); showToast('Customer Deleted'); }
+            catch(e) { showToast('Error deleting', 'error'); }
+        }
+
+        window.copyCustomerLink = (id) => {
+            let baseUrl = window.location.href.split('?')[0].replace('admin.html', 'customer.html');
+            if(!baseUrl.includes('customer.html')) {
+                baseUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '') + '/customer.html';
+            }
+            const fullUrl = `${baseUrl}?id=${id}`;
+            
+            const ta = document.createElement("textarea");
+            ta.value = fullUrl;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            showToast("Link Copied! 🔗 Bhej do customer ko.");
+        }
+
+        let editingCustomerId = null;
+        window.openEditCustomer = (id) => {
+            const cust = customers.find(c => c.id === id);
+            if(!cust) return;
+            editingCustomerId = id;
+            document.getElementById('edit-cust-name').value = cust.name;
+            document.getElementById('edit-cust-business').value = cust.businessName || '';
+            document.getElementById('edit-cust-phone').value = cust.phone || '';
+            document.getElementById('edit-cust-address').value = cust.address || '';
+            document.getElementById('edit-customer-modal').classList.remove('hidden');
+        };
+        window.closeEditModal = () => document.getElementById('edit-customer-modal').classList.add('hidden');
+        
+        window.submitEditCustomer = async (e) => {
+            e.preventDefault();
+            const data = {
+                name: document.getElementById('edit-cust-name').value,
+                businessName: document.getElementById('edit-cust-business').value,
+                phone: document.getElementById('edit-cust-phone').value,
+                address: document.getElementById('edit-cust-address').value,
+            };
+            try {
+                await updateDoc(doc(getCol('ba_customers'), editingCustomerId), data);
+                closeEditModal();
+                showToast('Customer Updated!');
+            } catch(error) { showToast('Error updating customer', 'error'); }
+        };
+
+        window.viewCustomerHistory = (id) => {
+            const cust = customers.find(c => c.id === id);
+            const custOrders = orders.filter(o => o.customerId === id && o.status === 'delivered');
+            const total = custOrders.reduce((sum, o) => sum + o.total, 0);
+            
+            document.getElementById('hist-modal-title').innerText = `${cust.name} ki History`;
+            document.getElementById('hist-modal-total').innerText = `Total Billed: ₹${total}`;
+            
+            const list = document.getElementById('hist-modal-list');
+            if(custOrders.length === 0) {
+                list.innerHTML = `<p class="text-center text-gray-500 py-4">Koi delivered order nahi hai.</p>`;
+            } else {
+                list.innerHTML = custOrders.map(o => `
+                    <div class="flex justify-between items-center border-b border-gray-100 py-3 text-sm">
+                        <div>
+                            <p class="text-gray-500 text-xs mb-1">${new Date(o.createdAt).toLocaleDateString()} at ${new Date(o.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                            <p class="font-medium text-gray-800">${o.items.map(i => `${i.qty}x ${i.name}`).join(', ')}</p>
+                        </div>
+                        <span class="font-bold text-green-600 bg-green-50 px-2 py-1 rounded">₹${o.total}</span>
+                    </div>
+                `).join('');
+            }
+            document.getElementById('customer-history-modal').classList.remove('hidden');
+        };
+        window.closeHistoryModal = () => document.getElementById('customer-history-modal').classList.add('hidden');
+
+        function renderCustomers() {
+            const container = document.getElementById('customers-container');
+            const deliveredOrders = orders.filter(o => o.status === 'delivered');
+
+            container.innerHTML = customers.map(c => {
+                const totalSpent = deliveredOrders.filter(o => o.customerId === c.id).reduce((sum, o) => sum + o.total, 0);
+                return `
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <h3 class="font-bold text-xl text-gray-900">${c.name}</h3>
+                            ${c.businessName ? `<p class="text-orange-600 text-sm font-medium mt-1"><i class="fa-solid fa-building mr-1"></i>${c.businessName}</p>` : ''}
+                        </div>
+                        <button onclick="deleteCustomer('${c.id}')" class="text-red-400 hover:text-red-600 p-1"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                    <div class="text-gray-500 text-sm mb-4 space-y-1 mt-2">
+                        <p><i class="fa-solid fa-phone w-4"></i> ${c.phone || 'N/A'}</p>
+                        ${c.address ? `<p><i class="fa-solid fa-location-dot w-4"></i> ${c.address}</p>` : ''}
+                    </div>
+                    
+                    <div class="bg-orange-50 p-3 rounded-lg mb-4 flex justify-between items-center">
+                        <span class="text-orange-800 font-medium text-sm">Total Billed:</span>
+                        <span class="text-orange-600 font-bold text-lg">₹${totalSpent}</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 mt-auto">
+                        <button onclick="viewCustomerHistory('${c.id}')" class="py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 font-medium rounded flex justify-center items-center gap-1 transition-colors text-sm">
+                            <i class="fa-solid fa-clock-rotate-left"></i> Khata
+                        </button>
+                        <button onclick="openEditCustomer('${c.id}')" class="py-2 bg-gray-50 text-gray-600 hover:bg-gray-200 font-medium rounded flex justify-center items-center gap-1 transition-colors text-sm">
+                            <i class="fa-solid fa-pen"></i> Edit
+                        </button>
+                        <button onclick="copyCustomerLink('${c.id}')" class="col-span-2 py-2 bg-gray-900 text-white hover:bg-black font-medium rounded flex justify-center items-center gap-2 transition-colors text-sm">
+                            <i class="fa-solid fa-link"></i> Copy Ordering Link
+                        </button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        document.getElementById('menu-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                name: document.getElementById('menu-name').value,
+                category: document.getElementById('menu-category').value,
+                price: Number(document.getElementById('menu-price').value),
+                emoji: document.getElementById('menu-emoji').value,
+                description: document.getElementById('menu-desc').value
+            };
+            try {
+                await addDoc(getCol('ba_menu'), data);
+                e.target.reset();
+                toggleForm('menu-form');
+                showToast('Menu Item Added!');
+            } catch(e) { showToast('Error adding item', 'error'); }
+        });
+
+        window.deleteMenu = async (id) => {
+            try { await deleteDoc(doc(getCol('ba_menu'), id)); showToast('Item Deleted'); }
+            catch(e) { showToast('Error deleting', 'error'); }
+        }
+
+        function renderMenu() {
+            const categories = [...new Set(menu.map(item => item.category))].filter(Boolean);
+            const container = document.getElementById('menu-container');
+
+            if (categories.length === 0) {
+                container.innerHTML = `<div class="text-center p-8 text-gray-500 bg-white rounded-xl">Menu abhi khali hai. Upar 'Add Item' pe click karein.</div>`;
+                return;
+            }
+
+            container.innerHTML = categories.map(cat => {
+                const items = menu.filter(m => m.category === cat);
+                const itemsHtml = items.map(item => `
+                    <div class="bg-white p-4 rounded-xl border border-gray-100 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="text-3xl">${item.emoji}</div>
+                            <div>
+                                <h4 class="font-bold text-gray-900">${item.name}</h4>
+                                <p class="text-orange-600 font-bold">₹${item.price}</p>
+                                ${item.description ? `<p class="text-xs text-gray-400 mt-1">${item.description}</p>` : ''}
+                            </div>
+                        </div>
+                        <button onclick="deleteMenu('${item.id}')" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                `).join('');
+
+                return `
+                <div class="mb-6">
+                    <h3 class="font-bold text-lg text-gray-500 mb-3 uppercase tracking-wider">${cat}</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">${itemsHtml}</div>
+                </div>`;
+            }).join('');
+        }
+
+    </script>
+</body>
+</html>
